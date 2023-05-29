@@ -1,4 +1,4 @@
-module github.com/WALL-EEEEEEE/Axiom
+module github.com/WALL-EEEEEEE/axiom
 
 go 1.19
 
