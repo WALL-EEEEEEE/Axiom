@@ -1,23 +1,14 @@
 package stream
 
-type Inlet interface {
-	In() chan<- interface{}
+type Stream struct {
+	PassThrough
+	name string
 }
 
-type Outlet interface {
-	Out() <-chan interface{}
+func NewStream(name string) Stream {
+	return Stream{name: name}
 }
 
-type Sink interface {
-	Inlet
-}
-type Source interface {
-	Outlet
-	Via(Flow) Flow
-}
-type Flow interface {
-	Inlet
-	Outlet
-	Via(Flow) Flow
-	To(Sink)
+func (stream Stream) GetName() string {
+	return stream.name
 }

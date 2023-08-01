@@ -6,19 +6,6 @@ import (
 	. "github.com/WALL-EEEEEEE/Axiom/core/stream"
 )
 
-type Stream struct {
-	PassThrough
-	name string
-}
-
-func NewStream(name string) Stream {
-	return Stream{name: name}
-}
-
-func (stream Stream) GetName() string {
-	return stream.name
-}
-
 type IExecutor interface {
 	Start()
 	GetName() string
@@ -34,16 +21,13 @@ type IRunnable interface {
 
 type Task struct {
 	sroute Broker[interface{}]
-	stream Stream
 	name   string
 	nxts   []Task
 }
 
 func NewTask(name string) Task {
 	broker := NewBroker[interface{}]()
-	stream := NewStream(name)
-	broker.publishCh = stream.Out()
-	return Task{name: name, stream: NewStream(name), sroute: broker}
+	return Task{name: name, sroute: broker}
 }
 
 func (task Task) GetName() string {
@@ -83,7 +67,7 @@ type DefaultExecutor struct {
 
 func NewDFExecutor(name string) DefaultExecutor {
 	broker := NewBroker[interface{}]()
-	exec := DefaultExecutor{name: name, broker: broker}
+	exec := DefaultExecutor{name: name, broker: &broker}
 	return exec
 }
 
