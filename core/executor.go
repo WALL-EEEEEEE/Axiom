@@ -19,8 +19,6 @@ func (stream Stream) GetName() string {
 	return stream.name
 }
 
-type Collector chan interface{}
-
 type IExecutor interface {
 	Start()
 	GetName() string
@@ -30,17 +28,22 @@ type IExecutor interface {
 
 type IRunnable interface {
 	Serv
-	Run(collector *Collector)
+	Run()
 	GetName() string
 }
 
 type Task struct {
+	sroute Broker[interface{}]
 	stream Stream
 	name   string
+	nxts   []Task
 }
 
 func NewTask(name string) Task {
-	return Task{name: name, stream: NewStream(name)}
+	broker := NewBroker[interface{}]()
+	stream := NewStream(name)
+	broker.publishCh = stream.Out()
+	return Task{name: name, stream: NewStream(name), sroute: broker}
 }
 
 func (task Task) GetName() string {
@@ -51,23 +54,36 @@ func (task Task) GetType() []ServType {
 	return []ServType{TASK}
 }
 
-func (task Task) Run(collector *Collector) {
-	task.stream.In() <- task.name
+func (task Task) Chain(nextTask ...Task) {
+	task.nxts = append(task.nxts, nextTask...)
+}
+
+func (task Task) Run() {
+	var wg sync.WaitGroup
+	_start := func(task Task) {
+		defer func() {
+			wg.Done()
+		}()
+		task.Run()
+	}
+	for _, task := range task.nxts {
+		wg.Add(1)
+		go _start(task)
+	}
+	wg.Wait()
 }
 
 var _ IRunnable = (*Task)(nil)
 
 type DefaultExecutor struct {
-	name      string
-	tasks     []IRunnable
-	collector *Collector
-	broker    *Broker[interface{}]
+	name   string
+	tasks  []IRunnable
+	broker *Broker[interface{}]
 }
 
 func NewDFExecutor(name string) DefaultExecutor {
 	broker := NewBroker[interface{}]()
-	collector := Collector(broker.publishCh)
-	exec := DefaultExecutor{name: name, collector: &collector, broker: broker}
+	exec := DefaultExecutor{name: name, broker: broker}
 	return exec
 }
 
@@ -76,7 +92,7 @@ func (executor DefaultExecutor) startTask(wg *sync.WaitGroup) {
 		defer func() {
 			wg.Done()
 		}()
-		task.Run(executor.collector)
+		task.Run()
 	}
 	for _, task := range executor.tasks {
 		wg.Add(1)

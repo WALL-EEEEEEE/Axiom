@@ -1,4 +1,4 @@
-package core
+package stream
 
 import (
 	"github.com/bobg/go-generics/maps"
@@ -13,8 +13,8 @@ type Broker[T any] struct {
 	subs      map[chan T]struct{}
 }
 
-func NewBroker[T any]() *Broker[T] {
-	return &Broker[T]{
+func NewBroker[T any]() Broker[T] {
+	return Broker[T]{
 		stopCh:    make(chan struct{}),
 		publishCh: make(chan T, 1),
 		subCh:     make(chan chan T, 1),
@@ -61,21 +61,21 @@ func (b *Broker[T]) Start() {
 	}
 }
 
-func (b *Broker[T]) Close() {
+func (b Broker[T]) Close() {
 	close(b.stopCh)
 }
 
-func (b *Broker[T]) Wait() {
+func (b Broker[T]) Wait() {
 	<-b.stopCh
 }
 
-func (b *Broker[T]) Subscribe() chan T {
+func (b Broker[T]) Subscribe() chan T {
 	msgCh := make(chan T, 1)
 	b.subCh <- msgCh
 	return msgCh
 }
 
-func (b *Broker[T]) Unsubscribe(msgCh chan T) {
+func (b Broker[T]) Unsubscribe(msgCh chan T) {
 	b.unsubCh <- msgCh
 }
 
