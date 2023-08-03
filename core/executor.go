@@ -20,14 +20,12 @@ type IRunnable interface {
 }
 
 type Task struct {
-	sroute Broker[interface{}]
 	name   string
 	nxts   []Task
 }
 
 func NewTask(name string) Task {
 	broker := NewBroker[interface{}]()
-	return Task{name: name, sroute: broker}
 }
 
 func (task Task) GetName() string {
@@ -38,8 +36,6 @@ func (task Task) GetType() []ServType {
 	return []ServType{TASK}
 }
 
-func (task Task) Chain(nextTask ...Task) {
-	task.nxts = append(task.nxts, nextTask...)
 }
 
 func (task Task) Run() {
@@ -60,14 +56,9 @@ func (task Task) Run() {
 var _ IRunnable = (*Task)(nil)
 
 type DefaultExecutor struct {
-	name   string
-	tasks  []IRunnable
-	broker *Broker[interface{}]
 }
 
 func NewDFExecutor(name string) DefaultExecutor {
-	broker := NewBroker[interface{}]()
-	exec := DefaultExecutor{name: name, broker: &broker}
 	return exec
 }
 
@@ -85,11 +76,9 @@ func (executor DefaultExecutor) startTask(wg *sync.WaitGroup) {
 }
 
 func (executor DefaultExecutor) Start() {
-	go executor.broker.Start()
 	var task_wg sync.WaitGroup
 	executor.startTask(&task_wg)
 	task_wg.Wait()
-	executor.broker.Close()
 }
 
 func (executor DefaultExecutor) Add(task IRunnable) {

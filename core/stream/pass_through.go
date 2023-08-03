@@ -20,7 +20,6 @@ func NewPassThrough[T any]() *PassThrough[T] {
 		out: make(chan T),
 	}
 	go passThrough.doStream()
-
 	return passThrough
 }
 
@@ -56,5 +55,10 @@ func (pt *PassThrough[T]) doStream() {
 	for elem := range pt.in {
 		pt.out <- elem
 	}
+	close(pt.out)
+}
+
+func (pt *PassThrough[T]) Close() {
+	close(pt.in)
 	close(pt.out)
 }
