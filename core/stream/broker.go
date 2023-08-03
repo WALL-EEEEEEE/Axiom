@@ -7,15 +7,22 @@ import (
 
 type Broker[T any] struct {
 	stopCh    chan struct{}
+	publishCh Stream[T]
+	subCh     chan Stream[T]
+	unsubCh   chan Stream[T]
+	subs      map[Stream[T]]struct{}
 }
 
 func NewBroker[T any]() Broker[T] {
 	return Broker[T]{
 		stopCh:    make(chan struct{}),
+		publishCh: NewStream[T]("publishCh"),
+		subCh:     make(chan Stream[T], 1),
+		unsubCh:   make(chan Stream[T], 1),
+		subs:      map[Stream[T]]struct{}{},
 	}
 }
 
-func (b *Broker[T]) Via(stream Stream) {
 func (b *Broker[T]) Via(stream Stream[T]) {
 	b.publishCh = stream
 }

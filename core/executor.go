@@ -20,12 +20,14 @@ type IRunnable interface {
 }
 
 type Task struct {
+	broker Broker[interface{}]
 	name   string
 	nxts   []Task
 }
 
 func NewTask(name string) Task {
 	broker := NewBroker[interface{}]()
+	return Task{name: name, broker: broker}
 }
 
 func (task Task) GetName() string {
@@ -35,7 +37,16 @@ func (task Task) GetName() string {
 func (task Task) GetType() []ServType {
 	return []ServType{TASK}
 }
+func (task Task) From(otask *Task) {
+	upstream := otask.broker.Subscribe()
+	task.broker.Via(upstream)
+}
 
+func (task Task) Chain(nextTasks ...Task) {
+	for _, ntask := range nextTasks {
+		task.From(&ntask)
+		task.nxts = append(task.nxts, ntask)
+	}
 }
 
 func (task Task) Run() {
@@ -56,9 +67,12 @@ func (task Task) Run() {
 var _ IRunnable = (*Task)(nil)
 
 type DefaultExecutor struct {
+	name  string
+	tasks []IRunnable
 }
 
 func NewDFExecutor(name string) DefaultExecutor {
+	exec := DefaultExecutor{name: name}
 	return exec
 }
 
