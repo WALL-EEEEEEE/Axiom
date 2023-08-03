@@ -19,10 +19,18 @@ type IRunnable interface {
 	GetName() string
 }
 
+type ITask interface {
+	IRunnable
+	Chain(nextTasks ...ITask)
+	Publish(msg interface{})
+	GetOutputStream() Stream[interface{}]
+	GetInputStream() Stream[interface{}]
+}
+
 type Task struct {
 	broker Broker[interface{}]
 	name   string
-	nxts   []Task
+	nxts   []ITask
 }
 
 func NewTask(name string) Task {
@@ -37,21 +45,32 @@ func (task Task) GetName() string {
 func (task Task) GetType() []ServType {
 	return []ServType{TASK}
 }
-func (task Task) From(otask *Task) {
-	upstream := otask.broker.Subscribe()
+
+func (task Task) GetOutputStream() Stream[interface{}] {
+	return task.broker.GetOutputStream()
+}
+func (task Task) GetInputStream() Stream[interface{}] {
+	return task.broker.GetInputStream()
+}
+
+func (task Task) From(otask ITask) {
+	upstream := otask.GetOutputStream()
 	task.broker.Via(upstream)
 }
 
-func (task Task) Chain(nextTasks ...Task) {
+func (task Task) Chain(nextTasks ...ITask) {
 	for _, ntask := range nextTasks {
-		task.From(&ntask)
+		task.From(ntask)
 		task.nxts = append(task.nxts, ntask)
 	}
+}
+func (task Task) Publish(msg interface{}) {
+	task.broker.Publish(msg)
 }
 
 func (task Task) Run() {
 	var wg sync.WaitGroup
-	_start := func(task Task) {
+	_start := func(task ITask) {
 		defer func() {
 			wg.Done()
 		}()

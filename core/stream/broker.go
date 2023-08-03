@@ -83,6 +83,14 @@ func (b Broker[T]) Unsubscribe(msgCh Stream[T]) {
 	b.unsubCh <- msgCh
 }
 
+func (b Broker[T]) GetInputStream() Stream[T] {
+	return b.publishCh
+}
+
+func (b Broker[T]) GetOutputStream() Stream[T] {
+	return b.Subscribe()
+}
+
 func (b *Broker[T]) Publish(msg T) {
 	b.publishCh.In() <- msg
 }
