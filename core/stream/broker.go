@@ -23,7 +23,11 @@ func NewBroker[T any]() Broker[T] {
 	}
 }
 
-func (b *Broker[T]) Start() {
+func (b *Broker[T]) Via(stream Stream) {
+	panic("Broker cannot be used as a Via")
+}
+
+func (b *Broker[T]) doStream() {
 	broadcast_cnt := 1
 	for {
 		select {
