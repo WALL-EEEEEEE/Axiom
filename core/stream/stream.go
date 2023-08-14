@@ -6,7 +6,7 @@ type Stream[T any] struct {
 }
 
 func NewStream[T any](name string) Stream[T] {
-	return Stream[T]{name: name}
+	return Stream[T]{name: name, PassThrough: NewPassThrough[T]()}
 }
 
 func (stream Stream[T]) GetName() string {

@@ -14,20 +14,22 @@ type Broker[T any] struct {
 }
 
 func NewBroker[T any]() Broker[T] {
-	return Broker[T]{
+	broker := Broker[T]{
 		stopCh:    make(chan struct{}),
 		publishCh: NewStream[T]("publishCh"),
 		subCh:     make(chan Stream[T], 1),
 		unsubCh:   make(chan Stream[T], 1),
 		subs:      map[Stream[T]]struct{}{},
 	}
+	go broker.doStream()
+	return broker
 }
 
 func (b *Broker[T]) Via(stream Stream[T]) {
 	b.publishCh = stream
 }
 
-func (b *Broker[T]) Start() {
+func (b *Broker[T]) doStream() {
 	broadcast_cnt := 1
 	for {
 		select {

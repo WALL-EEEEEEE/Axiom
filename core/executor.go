@@ -95,7 +95,7 @@ func NewDFExecutor(name string) DefaultExecutor {
 	return exec
 }
 
-func (executor DefaultExecutor) startTask(wg *sync.WaitGroup) {
+func (executor *DefaultExecutor) startTask(wg *sync.WaitGroup) {
 	_start := func(task IRunnable) {
 		defer func() {
 			wg.Done()
@@ -108,17 +108,17 @@ func (executor DefaultExecutor) startTask(wg *sync.WaitGroup) {
 	}
 }
 
-func (executor DefaultExecutor) Start() {
+func (executor *DefaultExecutor) Start() {
 	var task_wg sync.WaitGroup
 	executor.startTask(&task_wg)
 	task_wg.Wait()
 }
 
-func (executor DefaultExecutor) Add(task IRunnable) {
+func (executor *DefaultExecutor) Add(task IRunnable) {
 	executor.tasks = append(executor.tasks, task)
 }
 
-func (executor DefaultExecutor) List() []string {
+func (executor *DefaultExecutor) List() []string {
 	var names []string
 	for _, task := range executor.tasks {
 		names = append(names, task.GetName())
@@ -126,7 +126,7 @@ func (executor DefaultExecutor) List() []string {
 	return names
 }
 
-func (executor DefaultExecutor) GetName() string {
+func (executor *DefaultExecutor) GetName() string {
 	return executor.name
 }
 
