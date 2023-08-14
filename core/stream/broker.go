@@ -67,29 +67,29 @@ func (b *Broker[T]) doStream() {
 	}
 }
 
-func (b Broker[T]) Close() {
+func (b *Broker[T]) Close() {
 	close(b.stopCh)
 }
 
-func (b Broker[T]) Wait() {
+func (b *Broker[T]) Wait() {
 	<-b.stopCh
 }
 
-func (b Broker[T]) Subscribe() Stream[T] {
+func (b *Broker[T]) Subscribe() Stream[T] {
 	msgCh := NewStream[T]("0")
 	b.subCh <- msgCh
 	return msgCh
 }
 
-func (b Broker[T]) Unsubscribe(msgCh Stream[T]) {
+func (b *Broker[T]) Unsubscribe(msgCh Stream[T]) {
 	b.unsubCh <- msgCh
 }
 
-func (b Broker[T]) GetInputStream() Stream[T] {
+func (b *Broker[T]) GetInputStream() Stream[T] {
 	return b.publishCh
 }
 
-func (b Broker[T]) GetOutputStream() Stream[T] {
+func (b *Broker[T]) GetOutputStream() Stream[T] {
 	return b.Subscribe()
 }
 

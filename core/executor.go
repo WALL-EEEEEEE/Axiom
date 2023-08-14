@@ -9,7 +9,7 @@ import (
 type IExecutor interface {
 	Start()
 	GetName() string
-	Add(task IRunnable)
+	Add(task ITask)
 	List() []string
 }
 
@@ -21,6 +21,7 @@ type IRunnable interface {
 
 type ITask interface {
 	IRunnable
+	run()
 	Chain(nextTasks ...ITask)
 	Publish(msg interface{})
 	GetOutputStream() Stream[interface{}]
@@ -28,6 +29,7 @@ type ITask interface {
 }
 
 type Task struct {
+	ITask
 	broker Broker[interface{}]
 	name   string
 	nxts   []ITask
@@ -38,56 +40,57 @@ func NewTask(name string) Task {
 	return Task{name: name, broker: broker}
 }
 
-func (task Task) GetName() string {
+func (task *Task) GetName() string {
 	return task.name
 }
 
-func (task Task) GetType() []ServType {
+func (task *Task) GetType() []ServType {
 	return []ServType{TASK}
 }
 
-func (task Task) GetOutputStream() Stream[interface{}] {
+func (task *Task) GetOutputStream() Stream[interface{}] {
 	return task.broker.GetOutputStream()
 }
-func (task Task) GetInputStream() Stream[interface{}] {
+func (task *Task) GetInputStream() Stream[interface{}] {
 	return task.broker.GetInputStream()
 }
 
-func (task Task) From(otask ITask) {
+func (task *Task) From(otask ITask) {
 	upstream := otask.GetOutputStream()
 	task.broker.Via(upstream)
 }
 
-func (task Task) Chain(nextTasks ...ITask) {
+func (task *Task) Chain(nextTasks ...ITask) {
 	for _, ntask := range nextTasks {
 		task.From(ntask)
 		task.nxts = append(task.nxts, ntask)
 	}
 }
-func (task Task) Publish(msg interface{}) {
+func (task *Task) Publish(msg interface{}) {
 	task.broker.Publish(msg)
 }
 
-func (task Task) Run() {
+func (task *Task) run() {
 	var wg sync.WaitGroup
-	_start := func(task ITask) {
+	_start := func(itask ITask) {
 		defer func() {
 			wg.Done()
 		}()
-		task.Run()
+		itask.Run()
 	}
 	for _, task := range task.nxts {
 		wg.Add(1)
 		go _start(task)
 	}
+	task.Run()
 	wg.Wait()
 }
 
-var _ IRunnable = (*Task)(nil)
+var _ ITask = (*Task)(nil)
 
 type DefaultExecutor struct {
 	name  string
-	tasks []IRunnable
+	tasks []ITask
 }
 
 func NewDFExecutor(name string) DefaultExecutor {
@@ -96,11 +99,11 @@ func NewDFExecutor(name string) DefaultExecutor {
 }
 
 func (executor *DefaultExecutor) startTask(wg *sync.WaitGroup) {
-	_start := func(task IRunnable) {
+	_start := func(task ITask) {
 		defer func() {
 			wg.Done()
 		}()
-		task.Run()
+		task.run()
 	}
 	for _, task := range executor.tasks {
 		wg.Add(1)
@@ -114,7 +117,7 @@ func (executor *DefaultExecutor) Start() {
 	task_wg.Wait()
 }
 
-func (executor *DefaultExecutor) Add(task IRunnable) {
+func (executor *DefaultExecutor) Add(task ITask) {
 	executor.tasks = append(executor.tasks, task)
 }
 
