@@ -38,37 +38,37 @@ func NewTask(name string) Task {
 	return Task{name: name, broker: broker}
 }
 
-func (task Task) GetName() string {
+func (task *Task) GetName() string {
 	return task.name
 }
 
-func (task Task) GetType() []ServType {
+func (task *Task) GetType() []ServType {
 	return []ServType{TASK}
 }
 
-func (task Task) GetOutputStream() Stream[interface{}] {
+func (task *Task) GetOutputStream() Stream[interface{}] {
 	return task.broker.GetOutputStream()
 }
-func (task Task) GetInputStream() Stream[interface{}] {
+func (task *Task) GetInputStream() Stream[interface{}] {
 	return task.broker.GetInputStream()
 }
 
-func (task Task) From(otask ITask) {
+func (task *Task) From(otask ITask) {
 	upstream := otask.GetOutputStream()
 	task.broker.Via(upstream)
 }
 
-func (task Task) Chain(nextTasks ...ITask) {
+func (task *Task) Chain(nextTasks ...ITask) {
 	for _, ntask := range nextTasks {
 		task.From(ntask)
 		task.nxts = append(task.nxts, ntask)
 	}
 }
-func (task Task) Publish(msg interface{}) {
+func (task *Task) Publish(msg interface{}) {
 	task.broker.Publish(msg)
 }
 
-func (task Task) Run() {
+func (task *Task) Run() {
 	var wg sync.WaitGroup
 	_start := func(task ITask) {
 		defer func() {
