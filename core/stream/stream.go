@@ -12,3 +12,11 @@ func NewStream[T any](name string) Stream[T] {
 func (stream Stream[T]) GetName() string {
 	return stream.name
 }
+
+func (stream *Stream[T]) Read() T {
+	return <-stream.out
+}
+
+func (stream *Stream[T]) Write(item T) {
+	stream.out <- item
+}

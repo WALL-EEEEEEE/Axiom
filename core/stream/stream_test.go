@@ -64,6 +64,28 @@ func TestStream(t *testing.T) {
 				assert.Equal(t, tc.Expected, expected)
 			},
 		},
+		{
+			Name:     "Read",
+			Input:    []int{1, 2, 3, 4},
+			Error:    nil,
+			Expected: []int{1, 2, 3, 4},
+			Func: func(tc TestCase[any, any]) {
+				stream := NewStream[int](tc.Name)
+				var expected []int
+				go func() {
+					for _, item := range tc.Input.([]int) {
+						t.Logf("stream %s <- %+v", stream.GetName(), item)
+						stream.Write(item)
+					}
+					stream.Close()
+				}()
+				for item := stream.Read(); item != 0; {
+					t.Logf("stream %s -> %+v", stream.GetName(), item)
+					expected = append(expected, item)
+				}
+				assert.Equal(t, tc.Expected, expected)
+			},
+		},
 	}
 	Run(cases, t)
 }
