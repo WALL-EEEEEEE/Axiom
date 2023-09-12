@@ -9,13 +9,13 @@ type TestCase[T any, E any] struct {
 	Error    error
 	Input    T
 	Expected E
-	Func     func(TestCase[T, E])
+	Check    func(TestCase[T, E])
 }
 
 func Run(cases []TestCase[any, any], t *testing.T) {
 	for _, t_case := range cases {
 		t.Run(t_case.Name, func(t *testing.T) {
-			t_case.Func(t_case)
+			t_case.Check(t_case)
 		})
 	}
 }

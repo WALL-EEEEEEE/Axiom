@@ -14,7 +14,7 @@ func TestStream(t *testing.T) {
 			Input:    "Test",
 			Error:    nil,
 			Expected: "Test",
-			Func: func(tc TestCase[any, any]) {
+			Check: func(tc TestCase[any, any]) {
 				stream := NewStream[int](tc.Input.(string))
 				print(stream.GetName())
 				assert.Equal(t, tc.Expected, stream.GetName())
@@ -25,7 +25,7 @@ func TestStream(t *testing.T) {
 			Input:    []int{1, 2, 3, 4},
 			Error:    nil,
 			Expected: []int{1, 2, 3, 4},
-			Func: func(tc TestCase[any, any]) {
+			Check: func(tc TestCase[any, any]) {
 				stream := NewStream[int](tc.Name)
 				var expected []int
 				go func() {
@@ -47,7 +47,7 @@ func TestStream(t *testing.T) {
 			Input:    []int{1, 2, 3, 4},
 			Error:    nil,
 			Expected: []int{1, 2, 3, 4},
-			Func: func(tc TestCase[any, any]) {
+			Check: func(tc TestCase[any, any]) {
 				stream := NewStream[int](tc.Name)
 				var expected []int
 				go func() {
@@ -69,7 +69,7 @@ func TestStream(t *testing.T) {
 			Input:    []int{1, 2, 3, 4},
 			Error:    nil,
 			Expected: []int{1, 2, 3, 4},
-			Func: func(tc TestCase[any, any]) {
+			Check: func(tc TestCase[any, any]) {
 				stream := NewStream[int](tc.Name)
 				var expected []int
 				go func() {
