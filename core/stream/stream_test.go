@@ -77,9 +77,9 @@ func TestStream(t *testing.T) {
 						t.Logf("stream %s <- %+v", stream.GetName(), item)
 						stream.Write(item)
 					}
-					stream.Close()
+					//stream.Close()
 				}()
-				for item := stream.Read(); item != 0; {
+				for item := stream.Read(); item != 0; item = stream.Read() {
 					t.Logf("stream %s -> %+v", stream.GetName(), item)
 					expected = append(expected, item)
 				}
