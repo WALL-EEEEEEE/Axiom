@@ -44,18 +44,18 @@ func (b *Broker[T]) doStream() {
 			b.subs[msgCh] = struct{}{}
 		case msgCh := <-b.unsubCh:
 			delete(b.subs, msgCh)
-		case msg := <-b.publishCh.Out():
+		case msg := <-b.publishCh.tunnel.out:
 			broadcast_cnt++
 			resi_subs := maps.Dup(b.subs)
 			for len(resi_subs) > 0 {
 				for msgCh := range resi_subs {
 					// msgCh is buffered, use non-blocking send to protect the broker:
 					if len(resi_subs) == 1 {
-						msgCh.In() <- msg
+						msgCh.tunnel.in <- msg
 						delete(resi_subs, msgCh)
 					} else {
 						select {
-						case msgCh.In() <- msg:
+						case msgCh.tunnel.in <- msg:
 							delete(resi_subs, msgCh)
 						default:
 						}
@@ -94,5 +94,5 @@ func (b *Broker[T]) GetOutputStream() Stream[T] {
 }
 
 func (b *Broker[T]) Publish(msg T) {
-	b.publishCh.In() <- msg
+	b.publishCh.tunnel.in <- msg
 }

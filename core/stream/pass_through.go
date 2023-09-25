@@ -11,7 +11,7 @@ type PassThrough[T any] struct {
 }
 
 // Verify PassThrough satisfies the Flow interface.
-var _ Flow = (*PassThrough[interface{}])(nil)
+var _ Flow[interface{}] = (*PassThrough[interface{}])(nil)
 
 // NewPassThrough returns a new PassThrough instance.
 func NewPassThrough[T any]() PassThrough[T] {
@@ -24,13 +24,13 @@ func NewPassThrough[T any]() PassThrough[T] {
 }
 
 // Via streams data through the given flow
-func (pt *PassThrough[T]) Via(flow Flow) Flow {
+func (pt *PassThrough[T]) Via(flow Flow[T]) Flow[T] {
 	go pt.transmit(flow)
 	return flow
 }
 
 // To streams data to the given sink
-func (pt *PassThrough[T]) To(sink Sink) {
+func (pt *PassThrough[T]) To(sink Sink[T]) {
 	pt.transmit(sink)
 }
 
@@ -44,8 +44,8 @@ func (pt *PassThrough[T]) In() chan<- T {
 	return pt.in
 }
 
-func (pt *PassThrough[T]) transmit(inlet Inlet) {
-	for elem := range pt.Out() {
+func (pt *PassThrough[T]) transmit(inlet Inlet[T]) {
+	for elem := range inlet.In() {
 		inlet.In() <- elem
 	}
 	close(inlet.In())
@@ -55,10 +55,5 @@ func (pt *PassThrough[T]) doStream() {
 	for elem := range pt.in {
 		pt.out <- elem
 	}
-	close(pt.out)
-}
-
-func (pt *PassThrough[T]) Close() {
-	close(pt.in)
 	close(pt.out)
 }
