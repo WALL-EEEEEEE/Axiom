@@ -1,23 +1,23 @@
 package stream
 
-type Inlet interface {
-	In() chan<- interface{}
+type Inlet[T any] interface {
+	In() chan<- T
 }
 
-type Outlet interface {
-	Out() <-chan interface{}
+type Outlet[T any] interface {
+	Out() <-chan T
 }
 
-type Sink interface {
-	Inlet
+type Sink[T any] interface {
+	Inlet[T]
 }
-type Source interface {
-	Outlet
-	Via(Flow) Flow
+type Source[T any] interface {
+	Outlet[T]
+	Via(Flow[T]) Flow[T]
 }
-type Flow interface {
-	Inlet
-	Outlet
-	Via(Flow) Flow
-	To(Sink)
+type Flow[T any] interface {
+	Inlet[T]
+	Outlet[T]
+	Via(Flow[T]) Flow[T]
+	To(Sink[T])
 }

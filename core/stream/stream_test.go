@@ -16,30 +16,7 @@ func TestStream(t *testing.T) {
 			Expected: "Test",
 			Check: func(tc TestCase[any, any]) {
 				stream := NewStream[int](tc.Input.(string))
-				print(stream.GetName())
 				assert.Equal(t, tc.Expected, stream.GetName())
-			},
-		},
-		{
-			Name:     "InOut",
-			Input:    []int{1, 2, 3, 4},
-			Error:    nil,
-			Expected: []int{1, 2, 3, 4},
-			Check: func(tc TestCase[any, any]) {
-				stream := NewStream[int](tc.Name)
-				var expected []int
-				go func() {
-					for _, item := range tc.Input.([]int) {
-						//t.Logf("stream %s <- %+v", stream.GetName(), item)
-						stream.In() <- item
-					}
-					close(stream.In())
-				}()
-				for item := range stream.Out() {
-					//t.Logf("stream %s -> %+v", stream.GetName(), item)
-					expected = append(expected, item)
-				}
-				assert.Equal(t, tc.Expected, expected)
 			},
 		},
 		{
@@ -48,24 +25,26 @@ func TestStream(t *testing.T) {
 			Error:    nil,
 			Expected: []int{1, 2, 3, 4},
 			Check: func(tc TestCase[any, any]) {
-				stream := NewStream[int](tc.Name)
+				upstream := NewStream[int](tc.Name + "_up")
+				downstream := NewStream[int](tc.Name + "_down")
+				downstream.Via(&upstream)
 				var expected []int
 				go func() {
 					for _, item := range tc.Input.([]int) {
-						//t.Logf("stream %s <- %+v", stream.GetName(), item)
-						stream.In() <- item
+						t.Logf("stream %s <- %+v", upstream.GetName(), item)
+						upstream.Write(item)
 					}
-					close(stream.In())
+					upstream.Close()
 				}()
-				for item := range stream.Out() {
-					//t.Logf("stream %s -> %+v", stream.GetName(), item)
+				for item := downstream.Read(); item != 0; item = downstream.Read() {
+					t.Logf("stream %s -> %+v", downstream.GetName(), item)
 					expected = append(expected, item)
 				}
 				assert.Equal(t, tc.Expected, expected)
 			},
 		},
 		{
-			Name:     "Read",
+			Name:     "Read/Write",
 			Input:    []int{1, 2, 3, 4},
 			Error:    nil,
 			Expected: []int{1, 2, 3, 4},
@@ -77,7 +56,7 @@ func TestStream(t *testing.T) {
 						t.Logf("stream %s <- %+v", stream.GetName(), item)
 						stream.Write(item)
 					}
-					//stream.Close()
+					stream.Close()
 				}()
 				for item := stream.Read(); item != 0; item = stream.Read() {
 					t.Logf("stream %s -> %+v", stream.GetName(), item)

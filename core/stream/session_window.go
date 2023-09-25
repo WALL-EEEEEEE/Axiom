@@ -7,28 +7,28 @@ import (
 
 // SessionWindow generates groups of elements by sessions of activity.
 // Session windows do not overlap and do not have a fixed start and end time.
-type SessionWindow struct {
+type SessionWindow[T any] struct {
 	sync.Mutex
 	inactivityGap time.Duration
 	timer         *time.Timer
-	in            chan interface{}
-	out           chan interface{}
+	in            chan T
+	out           chan T
 	done          chan struct{}
-	buffer        []interface{}
+	buffer        []T
 }
 
 // Verify SessionWindow satisfies the Flow interface.
-var _ Flow = (*SessionWindow)(nil)
+var _ Flow[any] = (*SessionWindow[any])(nil)
 
 // NewSessionWindow returns a new SessionWindow instance.
 //
 // inactivityGap is the gap of inactivity that closes a session window when occurred.
-func NewSessionWindow(inactivityGap time.Duration) *SessionWindow {
-	window := &SessionWindow{
+func NewSessionWindow[T any](inactivityGap time.Duration) *SessionWindow[T] {
+	window := &SessionWindow[T]{
 		inactivityGap: inactivityGap,
 		timer:         time.NewTimer(inactivityGap),
-		in:            make(chan interface{}),
-		out:           make(chan interface{}),
+		in:            make(chan T),
+		out:           make(chan T),
 		done:          make(chan struct{}),
 	}
 	go window.emit()
@@ -38,35 +38,35 @@ func NewSessionWindow(inactivityGap time.Duration) *SessionWindow {
 }
 
 // Via streams data through the given flow
-func (sw *SessionWindow) Via(flow Flow) Flow {
+func (sw *SessionWindow[T]) Via(flow Flow[T]) Flow[T] {
 	go sw.transmit(flow)
 	return flow
 }
 
 // To streams data to the given sink
-func (sw *SessionWindow) To(sink Sink) {
+func (sw *SessionWindow[T]) To(sink Sink[T]) {
 	sw.transmit(sink)
 }
 
 // Out returns an output channel for sending data
-func (sw *SessionWindow) Out() <-chan interface{} {
+func (sw *SessionWindow[T]) Out() <-chan T {
 	return sw.out
 }
 
 // In returns an input channel for receiving data
-func (sw *SessionWindow) In() chan<- interface{} {
+func (sw *SessionWindow[T]) In() chan<- T {
 	return sw.in
 }
 
 // submit emitted windows to the next Inlet
-func (sw *SessionWindow) transmit(inlet Inlet) {
+func (sw *SessionWindow[T]) transmit(inlet Inlet[T]) {
 	for elem := range sw.Out() {
 		inlet.In() <- elem
 	}
 	close(inlet.In())
 }
 
-func (sw *SessionWindow) receive() {
+func (sw *SessionWindow[T]) receive() {
 	for elem := range sw.in {
 		sw.Lock()
 		sw.buffer = append(sw.buffer, elem)
@@ -78,7 +78,7 @@ func (sw *SessionWindow) receive() {
 }
 
 // emit generates and emits a new window.
-func (sw *SessionWindow) emit() {
+func (sw *SessionWindow[T]) emit() {
 	defer sw.timer.Stop()
 
 	for {
@@ -91,7 +91,9 @@ func (sw *SessionWindow) emit() {
 
 			// send the window slice to the out chan
 			if len(windowSlice) > 0 {
-				sw.out <- windowSlice
+				for _, item := range windowSlice {
+					sw.out <- item
+				}
 			}
 
 		case <-sw.done:
