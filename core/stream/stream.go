@@ -25,6 +25,10 @@ func (stream *Stream[T]) From(upstream *Stream[T]) {
 	stream.tunnel.From(&(upstream.tunnel))
 }
 
+func (stream *Stream[T]) To(sink Sink[T]) {
+	stream.tunnel.To(sink)
+}
+
 func (stream *Stream[T]) Close() {
 	close(stream.tunnel.in)
 }

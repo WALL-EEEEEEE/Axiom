@@ -23,10 +23,15 @@ func NewPassThrough[T any]() PassThrough[T] {
 	return passThrough
 }
 
-// Via streams data through the given flow
+// From streams data through the given flow
 func (pt *PassThrough[T]) From(flow Flow[T]) Flow[T] {
-	go pt.transmit(flow)
-	return flow
+	go func() {
+		for elem := range flow.Out() {
+			pt.in <- elem
+		}
+		close(pt.in)
+	}()
+	return pt
 }
 
 // To streams data to the given sink
