@@ -21,8 +21,8 @@ func (stream *Stream[T]) Write(item T) {
 	stream.tunnel.in <- item
 }
 
-func (stream *Stream[T]) Via(upstream *Stream[T]) {
-	stream.tunnel.Via(&(upstream.tunnel))
+func (stream *Stream[T]) From(upstream *Stream[T]) {
+	stream.tunnel.From(&(upstream.tunnel))
 }
 
 func (stream *Stream[T]) Close() {

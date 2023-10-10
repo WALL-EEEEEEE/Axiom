@@ -18,6 +18,6 @@ type Source[T any] interface {
 type Flow[T any] interface {
 	Inlet[T]
 	Outlet[T]
-	Via(Flow[T]) Flow[T]
+	From(Flow[T]) Flow[T]
 	To(Sink[T])
 }

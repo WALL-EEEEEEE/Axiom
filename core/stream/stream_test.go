@@ -20,14 +20,14 @@ func TestStream(t *testing.T) {
 			},
 		},
 		{
-			Name:     "Via",
+			Name:     "From",
 			Input:    []int{1, 2, 3, 4},
 			Error:    nil,
 			Expected: []int{1, 2, 3, 4},
 			Check: func(tc TestCase[any, any]) {
 				upstream := NewStream[int](tc.Name + "_up")
 				downstream := NewStream[int](tc.Name + "_down")
-				downstream.Via(&upstream)
+				downstream.From(&upstream)
 				var expected []int
 				go func() {
 					for _, item := range tc.Input.([]int) {

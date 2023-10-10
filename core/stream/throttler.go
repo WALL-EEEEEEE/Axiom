@@ -114,7 +114,7 @@ func (th *Throttler[T]) bufferize() {
 }
 
 // Via streams data through the given flow
-func (th *Throttler[T]) Via(flow Flow[T]) Flow[T] {
+func (th *Throttler[T]) From(flow Flow[T]) Flow[T] {
 	go th.doStream(flow)
 	return flow
 }

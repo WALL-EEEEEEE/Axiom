@@ -24,7 +24,7 @@ func NewPassThrough[T any]() PassThrough[T] {
 }
 
 // Via streams data through the given flow
-func (pt *PassThrough[T]) Via(flow Flow[T]) Flow[T] {
+func (pt *PassThrough[T]) From(flow Flow[T]) Flow[T] {
 	go pt.transmit(flow)
 	return flow
 }
@@ -45,7 +45,7 @@ func (pt *PassThrough[T]) In() chan<- T {
 }
 
 func (pt *PassThrough[T]) transmit(inlet Inlet[T]) {
-	for elem := range inlet.In() {
+	for elem := range pt.out {
 		inlet.In() <- elem
 	}
 	close(inlet.In())

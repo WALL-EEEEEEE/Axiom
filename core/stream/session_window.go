@@ -38,7 +38,7 @@ func NewSessionWindow[T any](inactivityGap time.Duration) *SessionWindow[T] {
 }
 
 // Via streams data through the given flow
-func (sw *SessionWindow[T]) Via(flow Flow[T]) Flow[T] {
+func (sw *SessionWindow[T]) From(flow Flow[T]) Flow[T] {
 	go sw.transmit(flow)
 	return flow
 }

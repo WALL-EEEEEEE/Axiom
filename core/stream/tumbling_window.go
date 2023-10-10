@@ -36,7 +36,7 @@ func NewTumblingWindow[T any](size time.Duration) *TumblingWindow[T] {
 }
 
 // Via streams data through the given flow
-func (tw *TumblingWindow[T]) Via(flow Flow[T]) Flow[T] {
+func (tw *TumblingWindow[T]) From(flow Flow[T]) Flow[T] {
 	go tw.transmit(flow)
 	return flow
 }
