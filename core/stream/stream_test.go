@@ -26,7 +26,6 @@ func TestStream(t *testing.T) {
 			Expected: []int{1, 2, 3, 4},
 			Check: func(tc TestCase[any, any]) {
 				stream := NewStream[int](tc.Name)
-				var expected []int
 				go func() {
 					for _, item := range tc.Input.([]int) {
 						t.Logf("stream %s <- %+v", stream.GetName(), item)
@@ -34,11 +33,7 @@ func TestStream(t *testing.T) {
 					}
 					stream.Close()
 				}()
-				for item := stream.Read(); item != 0; item = stream.Read() {
-					t.Logf("stream %s -> %+v", stream.GetName(), item)
-					expected = append(expected, item)
-				}
-				assert.Equal(t, tc.Expected, expected)
+				assert.Equal(t, tc.Expected, stream.AsArray())
 			},
 		},
 		{
@@ -50,7 +45,6 @@ func TestStream(t *testing.T) {
 				upstream := NewStream[int](tc.Name + "_up")
 				downstream := NewStream[int](tc.Name + "_down")
 				downstream.From(&upstream)
-				var expected []int
 				go func() {
 					for _, item := range tc.Input.([]int) {
 						t.Logf("stream %s <- %+v", upstream.GetName(), item)
@@ -58,11 +52,7 @@ func TestStream(t *testing.T) {
 					}
 					upstream.Close()
 				}()
-				for item := downstream.Read(); item != 0; item = downstream.Read() {
-					t.Logf("stream %s -> %+v", downstream.GetName(), item)
-					expected = append(expected, item)
-				}
-				assert.Equal(t, tc.Expected, expected)
+				assert.Equal(t, tc.Expected, downstream.AsArray())
 			},
 		},
 		{
@@ -72,7 +62,7 @@ func TestStream(t *testing.T) {
 			Expected: []int{1, 2, 3, 4},
 			Check: func(tc TestCase[any, any]) {
 				stream := NewStream[int](tc.Name)
-				//var expected []int
+				var expected []int
 				go func() {
 					for _, item := range tc.Input.([]int) {
 						t.Logf("stream %s <- %+v", stream.GetName(), item)
@@ -81,10 +71,27 @@ func TestStream(t *testing.T) {
 					stream.Close()
 				}()
 				sink := NewOutputSink[int](tc.Name+"_stdout_sink", func(item int) {
-					print(item)
+					expected = append(expected, item)
 				})
 				stream.To(sink)
-				//assert.Equal(t, tc.Expected, expected)
+				assert.Equal(t, tc.Expected, expected)
+			},
+		},
+		{
+			Name:     "AsArray",
+			Input:    []int{1, 2, 3, 4},
+			Error:    nil,
+			Expected: []int{1, 2, 3, 4},
+			Check: func(tc TestCase[any, any]) {
+				stream := NewStream[int](tc.Name)
+				go func() {
+					for _, item := range tc.Input.([]int) {
+						t.Logf("stream %s <- %+v", stream.GetName(), item)
+						stream.Write(item)
+					}
+					stream.Close()
+				}()
+				assert.Equal(t, tc.Expected, stream.AsArray())
 			},
 		},
 	}
