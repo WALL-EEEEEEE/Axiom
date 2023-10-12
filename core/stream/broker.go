@@ -1,7 +1,9 @@
 package stream
 
 import (
+	. "github.com/WALL-EEEEEEE/Axiom/util"
 	"github.com/bobg/go-generics/maps"
+	"github.com/bobg/go-generics/slices"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -31,39 +33,31 @@ func (b *Broker[T]) Via(stream Stream[T]) {
 
 func (b *Broker[T]) doStream() {
 	broadcast_cnt := 1
+
+loop:
 	for {
 		select {
 		case <-b.stopCh:
 			log.Debugf("Broker broadcast: %d", broadcast_cnt)
 			b.publishCh.Close()
-			for subch := range b.subs {
-				subch.Close()
-			}
-			return
+
 		case msgCh := <-b.subCh:
 			b.subs[msgCh] = struct{}{}
 		case msgCh := <-b.unsubCh:
 			delete(b.subs, msgCh)
-		case msg := <-b.publishCh.tunnel.out:
+		case msg, ok := <-b.publishCh.tunnel.out:
 			broadcast_cnt++
-			resi_subs := maps.Dup(b.subs)
-			for len(resi_subs) > 0 {
-				for msgCh := range resi_subs {
-					// msgCh is buffered, use non-blocking send to protect the broker:
-					if len(resi_subs) == 1 {
-						msgCh.tunnel.in <- msg
-						delete(resi_subs, msgCh)
-					} else {
-						select {
-						case msgCh.tunnel.in <- msg:
-							delete(resi_subs, msgCh)
-						default:
-						}
-					}
-
-				}
+			if !ok {
+				break loop
 			}
+			sub_channels, _ := slices.Map(maps.Keys[Stream[T]](b.subs), func(i int, v Stream[T]) (chan T, error) {
+				return v.tunnel.in, nil
+			})
+			GatherSend(sub_channels, msg)
 		}
+	}
+	for subch := range b.subs {
+		subch.Close()
 	}
 }
 
