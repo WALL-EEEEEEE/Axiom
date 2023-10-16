@@ -1,27 +1,35 @@
 package stream
 
 import (
+	"context"
+	. "context"
+
 	. "github.com/WALL-EEEEEEE/Axiom/util"
 	"github.com/bobg/go-generics/maps"
 	"github.com/bobg/go-generics/slices"
-	log "github.com/sirupsen/logrus"
 )
 
 type Broker[T any] struct {
 	stopCh    chan struct{}
 	publishCh Stream[T]
-	subCh     chan Stream[T]
-	unsubCh   chan Stream[T]
-	subs      map[Stream[T]]struct{}
+	subCh     chan struct {
+		Stream[T]
+		CancelFunc
+	}
+	unsubCh chan Stream[T]
+	subs    map[Stream[T]]struct{}
 }
 
 func NewBroker[T any]() Broker[T] {
 	broker := Broker[T]{
 		stopCh:    make(chan struct{}),
 		publishCh: NewStream[T]("publishCh"),
-		subCh:     make(chan Stream[T], 1),
-		unsubCh:   make(chan Stream[T], 1),
-		subs:      map[Stream[T]]struct{}{},
+		subCh: make(chan struct {
+			Stream[T]
+			CancelFunc
+		}),
+		unsubCh: make(chan Stream[T]),
+		subs:    map[Stream[T]]struct{}{},
 	}
 	go broker.doStream()
 	return broker
@@ -38,11 +46,11 @@ loop:
 	for {
 		select {
 		case <-b.stopCh:
-			log.Debugf("Broker broadcast: %d", broadcast_cnt)
 			b.publishCh.Close()
-
-		case msgCh := <-b.subCh:
-			b.subs[msgCh] = struct{}{}
+		case subch := <-b.subCh:
+			_chan, cancelFunc := subch.Stream, subch.CancelFunc
+			b.subs[_chan] = struct{}{}
+			cancelFunc()
 		case msgCh := <-b.unsubCh:
 			delete(b.subs, msgCh)
 		case msg, ok := <-b.publishCh.tunnel.out:
@@ -71,7 +79,12 @@ func (b *Broker[T]) Wait() {
 
 func (b *Broker[T]) Subscribe() Stream[T] {
 	msgCh := NewStream[T]("0")
-	b.subCh <- msgCh
+	context, cancel := WithCancel(context.TODO())
+	b.subCh <- struct {
+		Stream[T]
+		CancelFunc
+	}{msgCh, cancel}
+	<-context.Done()
 	return msgCh
 }
 
@@ -87,6 +100,6 @@ func (b *Broker[T]) GetOutputStream() Stream[T] {
 	return b.Subscribe()
 }
 
-func (b *Broker[T]) Publish(msg T) {
+func (b *Broker[T]) Send(msg T) {
 	b.publishCh.tunnel.in <- msg
 }

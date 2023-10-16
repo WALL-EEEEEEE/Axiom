@@ -113,68 +113,6 @@ func select1Recv[T any](ctx context.Context, chanz chan T, chan2 chan T, i int) 
 	}
 }
 
-/*
-	func Select[T any](channels []chan T, chan2 chan T, param ...SelectParam) {
-		var _param SelectParam
-		if len(param) < 1 {
-			_param = DefaultSelectParam
-		} else {
-			_param = param[0]
-		}
-		//maxBatchSize := _param.MaxBatchSize
-		mode := _param.Mode
-		ctx := context.Background()
-		var l, i int = 0, 0
-
-		for i < len(channels) {
-			l = len(channels) - i
-			switch {
-				case l > 31 && maxBatchSize >= 32:
-					if mode == Recv {
-						go select32Recv(ctx, channels[i:i+32], chan2, i)
-					} else {
-						go select32Send(ctx, channels[i:i+32], chan2, i)
-					}
-					i += 32
-				case l > 15 && maxBatchSize >= 16:
-					if mode == Recv {
-						go select16Recv(ctx, channels[i:i+16], chan2, i)
-					} else {
-						go select32Send(ctx, channels[i:i+16], chan2, i)
-					}
-					i += 16
-				case l > 7 && maxBatchSize >= 8:
-					if mode == Recv {
-						go select8Recv(ctx, channels[i:i+8], chan2, i)
-					} else {
-						go select8Send(ctx, channels[i:i+8], chan2, i)
-					}
-					i += 8
-				case l > 3 && maxBatchSize >= 4:
-					if mode == Recv {
-						go select4Recv(ctx, channels[i:i+4], chan2, i)
-					} else {
-						go select4Send(ctx, channels[i:i+4], chan2, i)
-					}
-					i += 4
-				case l > 1 && maxBatchSize >= 2:
-					if mode == Recv {
-						go select2Recv(ctx, channels[i:i+2], chan2, i)
-					} else {
-						go select2Send(ctx, channels[i:i+2], chan2, i)
-					}
-					i += 2
-			case l > 0:
-				if mode == Recv {
-					go select1Recv(ctx, channels[i], chan2, i)
-				} else {
-					go select1Send(ctx, channels[i], chan2, i)
-				}
-				i += 1
-			}
-		}
-	}
-*/
 func GatherRecv[T any](chans []chan T, callback func(int, T, bool)) {
 	_chans := Dup[chan T](chans)
 	cases := make([]reflect.SelectCase, len(_chans))

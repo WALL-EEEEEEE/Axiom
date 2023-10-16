@@ -28,12 +28,12 @@ func TestStream(t *testing.T) {
 				stream := NewStream[int](tc.Name)
 				go func() {
 					for _, item := range tc.Input.([]int) {
-						t.Logf("stream %s <- %+v", stream.GetName(), item)
+						//t.Logf("stream %s <- %+v", stream.GetName(), item)
 						stream.Write(item)
 					}
 					stream.Close()
 				}()
-				assert.Equal(t, tc.Expected, stream.ToArray())
+				assert.Equal(t, tc.Expected, stream.AsArray())
 			},
 		},
 		{
@@ -47,12 +47,12 @@ func TestStream(t *testing.T) {
 				downstream.From(&upstream)
 				go func() {
 					for _, item := range tc.Input.([]int) {
-						t.Logf("stream %s <- %+v", upstream.GetName(), item)
+						//t.Logf("stream %s <- %+v", upstream.GetName(), item)
 						upstream.Write(item)
 					}
 					upstream.Close()
 				}()
-				assert.Equal(t, tc.Expected, downstream.ToArray())
+				assert.Equal(t, tc.Expected, downstream.AsArray())
 			},
 		},
 		{
@@ -65,7 +65,7 @@ func TestStream(t *testing.T) {
 				var expected []int
 				go func() {
 					for _, item := range tc.Input.([]int) {
-						t.Logf("stream %s <- %+v", stream.GetName(), item)
+						//t.Logf("stream %s <- %+v", stream.GetName(), item)
 						stream.Write(item)
 					}
 					stream.Close()
@@ -73,7 +73,7 @@ func TestStream(t *testing.T) {
 				sink := NewOutputSink[int](tc.Name+"_stdout_sink", func(item int) {
 					expected = append(expected, item)
 				})
-				stream.To(sink)
+				stream.To(&sink)
 				assert.Equal(t, tc.Expected, expected)
 			},
 		},
@@ -86,12 +86,12 @@ func TestStream(t *testing.T) {
 				stream := NewStream[int](tc.Name)
 				go func() {
 					for _, item := range tc.Input.([]int) {
-						t.Logf("stream %s <- %+v", stream.GetName(), item)
+						//t.Logf("stream %s <- %+v", stream.GetName(), item)
 						stream.Write(item)
 					}
 					stream.Close()
 				}()
-				assert.Equal(t, tc.Expected, stream.ToArray())
+				assert.Equal(t, tc.Expected, stream.AsArray())
 			},
 		},
 	}

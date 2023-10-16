@@ -35,12 +35,12 @@ func TestBroker(t *testing.T) {
 				go func() {
 					defer broker.Close()
 					for _, item := range tc.Input.([]int) {
-						t.Logf("Input: %d", item)
+						//t.Logf("Input: %d", item)
 						istream.Write(item)
 					}
 				}()
-				expected := ostream.ToArray()
-				t.Logf("Output: %+v", expected)
+				expected := ostream.AsArray()
+				//t.Logf("Output: %+v", expected)
 				assert.Equal(t, tc.Expected, expected)
 			},
 		},
@@ -63,7 +63,7 @@ func TestBroker(t *testing.T) {
 					defer broker.Close()
 					for _, it := range tc.Input.([]int) {
 						istream.Write(it)
-						t.Logf("Input: %d", it)
+						//t.Logf("Input: %d", it)
 					}
 				}()
 
@@ -71,7 +71,7 @@ func TestBroker(t *testing.T) {
 				for i, ostream := range ostreams {
 					wg.Add(1)
 					go func(i int, ostream Stream[int]) {
-						ostreamExpects[i] = ostream.ToArray()
+						ostreamExpects[i] = ostream.AsArray()
 						defer wg.Done()
 					}(i, ostream)
 				}

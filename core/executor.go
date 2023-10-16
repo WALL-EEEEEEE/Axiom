@@ -66,8 +66,8 @@ func (task *Task) Chain(nextTasks ...ITask) {
 		task.nxts = append(task.nxts, ntask)
 	}
 }
-func (task *Task) Publish(msg interface{}) {
-	task.broker.Publish(msg)
+func (task *Task) Send(msg interface{}) {
+	task.broker.Send(msg)
 }
 
 func (task *Task) run() {

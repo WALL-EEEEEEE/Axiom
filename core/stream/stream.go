@@ -34,13 +34,14 @@ func (stream *Stream[T]) From(upstream *Stream[T]) {
 
 func (stream *Stream[T]) To(sink Sink[T]) {
 	stream.tunnel.To(sink)
+	sink.wait()
 }
 
 func (stream *Stream[T]) IsClosed() bool {
 	return stream.closed
 }
 
-func (stream *Stream[T]) ToArray() []T {
+func (stream *Stream[T]) AsArray() []T {
 	var result []T
 	for {
 		it, ok := stream.Read()

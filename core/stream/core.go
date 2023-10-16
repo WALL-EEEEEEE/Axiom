@@ -10,6 +10,7 @@ type Outlet[T any] interface {
 
 type Sink[T any] interface {
 	Inlet[T]
+	wait()
 }
 type Source[T any] interface {
 	Outlet[T]
