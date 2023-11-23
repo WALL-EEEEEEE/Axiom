@@ -29,7 +29,7 @@ func TestBroker(t *testing.T) {
 			Error:    nil,
 			Expected: In_Out_Input,
 			Check: func(tc TestCase[any, any]) {
-				broker := NewBroker[int]()
+				broker := NewBroker[int](tc.Name)
 				istream := broker.GetInputStream()
 				ostream := broker.GetOutputStream()
 				go func() {
@@ -50,7 +50,7 @@ func TestBroker(t *testing.T) {
 			Error:    nil,
 			Expected: In_2Out_Input,
 			Check: func(tc TestCase[any, any]) {
-				broker := NewBroker[int]()
+				broker := NewBroker[int](tc.Name)
 				multi := 2
 				var ostreams []Stream[int]
 				var ostreamExpects [][]int

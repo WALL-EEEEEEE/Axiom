@@ -22,8 +22,9 @@ type IRunnable interface {
 type ITask interface {
 	IRunnable
 	run()
-	Chain(nextTasks ...ITask)
-	Publish(msg interface{})
+	From(ITask)
+	Chain(...ITask)
+	Publish(interface{})
 	GetOutputStream() Stream[interface{}]
 	GetInputStream() Stream[interface{}]
 }
@@ -36,7 +37,7 @@ type Task struct {
 }
 
 func NewTask(name string) Task {
-	broker := NewBroker[interface{}]()
+	broker := NewBroker[interface{}](name)
 	return Task{name: name, broker: broker}
 }
 
@@ -49,7 +50,8 @@ func (task *Task) GetType() []ServType {
 }
 
 func (task *Task) GetOutputStream() Stream[interface{}] {
-	return task.broker.GetOutputStream()
+	stream := task.broker.GetOutputStream()
+	return stream
 }
 func (task *Task) GetInputStream() Stream[interface{}] {
 	return task.broker.GetInputStream()
@@ -62,7 +64,7 @@ func (task *Task) From(otask ITask) {
 
 func (task *Task) Chain(nextTasks ...ITask) {
 	for _, ntask := range nextTasks {
-		task.From(ntask)
+		ntask.From(task)
 		task.nxts = append(task.nxts, ntask)
 	}
 }
@@ -83,7 +85,12 @@ func (task *Task) run() {
 		go _start(task)
 	}
 	task.Run()
+	task.close()
 	wg.Wait()
+}
+
+func (t *Task) close() {
+	t.broker.Close()
 }
 
 var _ ITask = (*Task)(nil)

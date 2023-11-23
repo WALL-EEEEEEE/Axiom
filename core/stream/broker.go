@@ -3,13 +3,16 @@ package stream
 import (
 	"context"
 	. "context"
+	"fmt"
 
 	. "github.com/WALL-EEEEEEE/Axiom/util"
 	"github.com/bobg/go-generics/maps"
 	"github.com/bobg/go-generics/slices"
+	log "github.com/sirupsen/logrus"
 )
 
 type Broker[T any] struct {
+	name      string
 	stopCh    chan struct{}
 	publishCh Stream[T]
 	subCh     chan struct {
@@ -20,8 +23,9 @@ type Broker[T any] struct {
 	subs    map[Stream[T]]struct{}
 }
 
-func NewBroker[T any]() Broker[T] {
+func NewBroker[T any](name string) Broker[T] {
 	broker := Broker[T]{
+		name:      name,
 		stopCh:    make(chan struct{}),
 		publishCh: NewStream[T]("publishCh"),
 		subCh: make(chan struct {
@@ -36,12 +40,11 @@ func NewBroker[T any]() Broker[T] {
 }
 
 func (b *Broker[T]) Via(stream Stream[T]) {
-	b.publishCh = stream
+	b.publishCh.From(&stream)
 }
 
 func (b *Broker[T]) doStream() {
 	broadcast_cnt := 1
-
 loop:
 	for {
 		select {
@@ -58,7 +61,9 @@ loop:
 			if !ok {
 				break loop
 			}
+			log.Debugf("Broker [%s] Recv: %+v", b.name, msg)
 			sub_channels, _ := slices.Map(maps.Keys[Stream[T]](b.subs), func(i int, v Stream[T]) (chan T, error) {
+				log.Debugf("Broker [%s] Send to Stream [%s]: %+v", b.name, v.GetName(), msg)
 				return v.tunnel.in, nil
 			})
 			GatherSend(sub_channels, msg)
@@ -78,7 +83,8 @@ func (b *Broker[T]) Wait() {
 }
 
 func (b *Broker[T]) Subscribe() Stream[T] {
-	msgCh := NewStream[T]("0")
+	name := fmt.Sprintf("%s-out-%s", b.name, "0")
+	msgCh := NewStream[T](name)
 	context, cancel := WithCancel(context.TODO())
 	b.subCh <- struct {
 		Stream[T]
