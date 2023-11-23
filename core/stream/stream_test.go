@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	. "github.com/WALL-EEEEEEE/Axiom/test"
-	"github.com/stretchr/testify/assert"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestStream(t *testing.T) {
@@ -16,7 +16,7 @@ func TestStream(t *testing.T) {
 			Expected: "Test",
 			Check: func(tc TestCase[any, any]) {
 				stream := NewStream[int](tc.Input.(string))
-				assert.Equal(t, tc.Expected, stream.GetName())
+				So(tc.Expected, ShouldEqual, stream.GetName())
 			},
 		},
 		{
@@ -33,7 +33,7 @@ func TestStream(t *testing.T) {
 					}
 					stream.Close()
 				}()
-				assert.Equal(t, tc.Expected, stream.AsArray())
+				So(tc.Expected, ShouldEqual, stream.AsArray())
 			},
 		},
 		{
@@ -52,7 +52,7 @@ func TestStream(t *testing.T) {
 					}
 					upstream.Close()
 				}()
-				assert.Equal(t, tc.Expected, downstream.AsArray())
+				So(tc.Expected, ShouldEqual, downstream.AsArray())
 			},
 		},
 		{
@@ -74,7 +74,7 @@ func TestStream(t *testing.T) {
 					expected = append(expected, item)
 				})
 				stream.To(&sink)
-				assert.Equal(t, tc.Expected, expected)
+				So(tc.Expected, ShouldEqual, expected)
 			},
 		},
 		{
@@ -91,7 +91,7 @@ func TestStream(t *testing.T) {
 					}
 					stream.Close()
 				}()
-				assert.Equal(t, tc.Expected, stream.AsArray())
+				So(tc.Expected, ShouldEqual, stream.AsArray())
 			},
 		},
 	}

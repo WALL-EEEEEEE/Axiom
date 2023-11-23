@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	. "github.com/WALL-EEEEEEE/Axiom/test"
-	"github.com/stretchr/testify/assert"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func genRandSlice(num int, min int, max int) []int {
@@ -41,7 +41,7 @@ func TestBroker(t *testing.T) {
 				}()
 				expected := ostream.AsArray()
 				//t.Logf("Output: %+v", expected)
-				assert.Equal(t, tc.Expected, expected)
+				So(tc.Expected, ShouldEqual, expected)
 			},
 		},
 		{
@@ -77,7 +77,7 @@ func TestBroker(t *testing.T) {
 				}
 				wg.Wait()
 				for _, ostreamExpect := range ostreamExpects {
-					assert.Equal(t, tc.Input, ostreamExpect)
+					So(tc.Input, ShouldEqual, ostreamExpect)
 				}
 			},
 		},

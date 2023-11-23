@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	. "github.com/WALL-EEEEEEE/Axiom/test"
-	"github.com/stretchr/testify/assert"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestGather(t *testing.T) {
@@ -32,7 +32,7 @@ func TestGather(t *testing.T) {
 				GatherRecv[int](select_chans, func(chan_no int, v int, ok bool) {
 					actual = append(actual, v)
 				})
-				assert.Equal(t, expected, actual)
+				So(expected, ShouldEqual, actual)
 			},
 		},
 		{
@@ -62,7 +62,7 @@ func TestGather(t *testing.T) {
 					actual[chan_no] = append(actual[chan_no], v)
 				})
 				for _, s := range actual {
-					assert.EqualValues(t, tc.Expected, s)
+					So(tc.Expected, ShouldEqual, s)
 				}
 				//t.Logf("%+v", actual)
 

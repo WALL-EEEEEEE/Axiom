@@ -2,6 +2,8 @@ package test
 
 import (
 	"testing"
+
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 type TestCase[T any, E any] struct {
@@ -14,7 +16,7 @@ type TestCase[T any, E any] struct {
 
 func Run(cases []TestCase[any, any], t *testing.T) {
 	for _, t_case := range cases {
-		t.Run(t_case.Name, func(t *testing.T) {
+		Convey(t_case.Name, t, func() {
 			t_case.Check(t_case)
 		})
 	}
