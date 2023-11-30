@@ -14,7 +14,7 @@ func parseYML(fname string, cfg interface{}) (err error) {
 		return fmt.Errorf("Failed to open file %s", fname)
 	}
 	decoder := yaml.NewDecoder(f)
-	err = decoder.Decode(&cfg)
+	err = decoder.Decode(cfg)
 	if err != nil {
 		return fmt.Errorf("file %s is not an valid yaml file", fname)
 	}
@@ -22,7 +22,7 @@ func parseYML(fname string, cfg interface{}) (err error) {
 }
 
 func ParseConfig(f string, cfg interface{}) error {
-	err := parseYML(f, &cfg)
+	err := parseYML(f, cfg)
 	if err != nil {
 		return err
 	}
